@@ -7,11 +7,13 @@ const bcrypt = require("bcryptjs");
 const app = express();
 app.use(express.json());
 
+
 app.use(cors({
-  origin: "*",
+  origin: ["http://localhost:3000", "https://your-netlify-domain.netlify.app"],
   methods: ["GET", "POST"],
   credentials: true
 }));
+
 
 app.get("/", (req, res) => {
   res.send("✅ PetalGlow Backend is running");
