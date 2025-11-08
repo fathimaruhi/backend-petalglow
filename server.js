@@ -1,63 +1,74 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+require("dotenv").config();
+const bcrypt = require("bcryptjs");
 
 const app = express();
 app.use(express.json());
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "*",
   methods: ["GET", "POST"],
   credentials: true
 }));
 
 app.get("/", (req, res) => {
-  res.send("PetalGlow Backend is running");
+  res.send("✅ PetalGlow Backend is running");
 });
 
-// Connect to MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/petalglow")
+// ✅ Connect to MongoDB safely
+const MONGO = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/petalglow";
+
+mongoose.connect(MONGO)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log("❌ Database Error:", err));
 
-// User model
+// ✅ Load User model
 const User = require("./models/User");
 
-// Signup
+// ✅ SIGNUP
 app.post("/api/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ success: false, message: "Email already exists" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ success: false, message: "Email already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashed });
-    await user.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    res.json({ success: true, message: "User registered" });
+    const newUser = new User({ name, email, password: hashedPassword });
+    await newUser.save();
+
+    res.json({ success: true, message: "User Registered" });
+
   } catch (err) {
-    console.error(err);
+    console.log(err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 });
 
-// Login
+// ✅ LOGIN
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+
     if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).json({ success: false, message: "Invalid credentials" });
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
     res.json({ success: true, message: "Login successful", user });
+
   } catch (err) {
-    console.error(err);
+    console.log(err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 });
 
-app.listen(5000, () => console.log("✅ Server running on http://localhost:5000"));
-    
+// ✅ PORT for Render or Local
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
