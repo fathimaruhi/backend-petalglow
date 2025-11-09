@@ -9,10 +9,15 @@ app.use(express.json());
 
 
 app.use(cors({
-  origin: ["http://localhost:3000", "https://your-netlify-domain.netlify.app"],
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "mellow-cupcake-2c1885.netlify.app"
+  ],
   methods: ["GET", "POST"],
   credentials: true
 }));
+
 
 
 app.get("/", (req, res) => {
@@ -73,4 +78,7 @@ app.post("/api/login", async (req, res) => {
 
 // ✅ PORT for Render or Local
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+// Print a clickable HTTP link in most terminals (e.g. http://localhost:5002)
+const localUrl = `http://localhost:${PORT}`;
+app.listen(PORT, () => console.log(`✅ Server running at ${localUrl}`));
